@@ -8,7 +8,7 @@ import arcade
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 650
 SCREEN_TITLE = "RPG"
-CHARACTER_SCALING = .2
+CHARACTER_SCALING = .1
 TILE_SCALING = 0.05
 PLAYER_MOVEMENT_SPEED = 5
 class MyGame(arcade.Window):
@@ -33,6 +33,8 @@ class MyGame(arcade.Window):
 
         self.physics_engine = None
 
+        self.camera = None
+
 
         arcade.set_background_color(arcade.csscolor.BLACK)
 
@@ -56,16 +58,34 @@ class MyGame(arcade.Window):
         self.scene.add_sprite("Player", self.player_sprite)
 
 
-        for x in range(0, 1250, 64):
+        for x in range(0, 1250, 20):
             wall = arcade.Sprite("Images/Rock.png", TILE_SCALING)
             wall.center_x = x
-            wall.center_y = 32
+            wall.center_y = 10
+            self.scene.add_sprite("Walls", wall)
+        for x in range(0, 1250, 20):
+            wall = arcade.Sprite("Images/Rock.png", TILE_SCALING)
+            wall.center_x = x
+            wall.center_y = 640
+            self.scene.add_sprite("Walls", wall)
+        for y in range(0, 1250, 20):
+            wall = arcade.Sprite("Images/Rock.png", TILE_SCALING)
+            wall.center_x = 10
+            wall.center_y = y
+            self.scene.add_sprite("Walls", wall)
+        for y in range(0, 1250, 20):
+            wall = arcade.Sprite("Images/Rock.png", TILE_SCALING)
+            wall.center_x = 990
+            wall.center_y = y
             self.scene.add_sprite("Walls", wall)
 
 
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite, self.scene.get_sprite_list("Walls")
         )
+
+        self.camera = arcade.Camera(self.width, self.height)
+        
    
     def on_draw(self):
         """Render the screen."""
@@ -73,6 +93,9 @@ class MyGame(arcade.Window):
 
         self.clear()
         # Code to draw the screen goes here
+
+        self.camera.use()
+
         self.scene.draw()
    
     def on_key_press(self, key, modifiers):
@@ -96,6 +119,30 @@ class MyGame(arcade.Window):
             self.player_sprite.change_x = 0
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = 0
+    def center_camera_player(self):
+        # Define the zoom level (e.g., 0.7 for zoomed-in view)
+        zoom_level = 0.7
+
+        # Set the camera scale for zoom
+        self.camera.scale = zoom_level
+
+        # Calculate the viewport dimensions based on the zoom level
+        viewport_width = SCREEN_WIDTH / zoom_level
+        viewport_height = SCREEN_HEIGHT / zoom_level
+
+        # Calculate the target camera position to center around the player
+        target_x = self.player_sprite.center_x - (viewport_width/ 3)
+        target_y = self.player_sprite.center_y - (viewport_height/3 )
+
+        
+        if target_x > 900:
+            target_x = 900
+        self.camera.move_to((target_x, target_y))
+
+        
+
+
+        
 
 
     def on_update(self, delta_time):
@@ -104,6 +151,8 @@ class MyGame(arcade.Window):
 
         # Move the player with the physics engine
         self.physics_engine.update()
+
+        self.center_camera_player()
 
 
    
