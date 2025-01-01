@@ -5,12 +5,13 @@ import arcade
 
 
 # Constants
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 650
+SCREEN_WIDTH = 1024
+SCREEN_HEIGHT = 640
 SCREEN_TITLE = "RPG"
 CHARACTER_SCALING = .1
-TILE_SCALING = 0.05
+TILE_SCALING = 1.2
 PLAYER_MOVEMENT_SPEED = 5
+LAYER_NAME_WALLS = "Walls_Collidable"
 class MyGame(arcade.Window):
     """
     Main application class.
@@ -26,6 +27,7 @@ class MyGame(arcade.Window):
 
 
         self.scene = None
+        self.gui_camera = None
 
 
         self.player_sprite = None
@@ -34,6 +36,7 @@ class MyGame(arcade.Window):
         self.physics_engine = None
 
         self.camera = None
+        self.health = 0
 
 
         arcade.set_background_color(arcade.csscolor.BLACK)
@@ -47,44 +50,51 @@ class MyGame(arcade.Window):
         """Set up the game here. Call this function to restart the game."""
         self.scene = arcade.Scene()
 
+        map_name = "Levels/Map_Template.json"
+        layer_options = {
+            LAYER_NAME_WALLS: {"use_spatial_hash": True},
+        }
+
+
+        # Read in the tiled map
+        self.tile_map = arcade.load_tilemap(map_name, TILE_SCALING, layer_options)
+
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
+        
+
+
 
         self.scene.add_sprite_list("Player")
         self.scene.add_sprite_list("Walls", use_spatial_hash = True)
        
         image_source =  "Images/Warrior_Image.png"
         self.player_sprite = arcade.Sprite(image_source, CHARACTER_SCALING)
-        self.player_sprite.center_x = 64
-        self.player_sprite.center_y = 128
+        self.player_sprite.center_x = 156
+        self.player_sprite.center_y = 156
         self.scene.add_sprite("Player", self.player_sprite)
 
+        if self.tile_map.background_color:
+            arcade.set_background_color(self.tile_map.background_color)
 
-        for x in range(0, 1250, 20):
-            wall = arcade.Sprite("Images/Rock.png", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 10
-            self.scene.add_sprite("Walls", wall)
-        for x in range(0, 1250, 20):
-            wall = arcade.Sprite("Images/Rock.png", TILE_SCALING)
-            wall.center_x = x
-            wall.center_y = 640
-            self.scene.add_sprite("Walls", wall)
-        for y in range(0, 1250, 20):
-            wall = arcade.Sprite("Images/Rock.png", TILE_SCALING)
-            wall.center_x = 10
-            wall.center_y = y
-            self.scene.add_sprite("Walls", wall)
-        for y in range(0, 1250, 20):
-            wall = arcade.Sprite("Images/Rock.png", TILE_SCALING)
-            wall.center_x = 990
-            wall.center_y = y
-            self.scene.add_sprite("Walls", wall)
 
 
         self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite, self.scene.get_sprite_list("Walls")
+            self.player_sprite, walls=self.scene.get_sprite_list(LAYER_NAME_WALLS)
         )
 
         self.camera = arcade.Camera(self.width, self.height)
+
+                # Set up the GUI Camera
+        self.gui_camera = arcade.Camera(self.width, self.height)
+
+        # Keep track of the score
+        self.health = 10 
+        """Will be changed to characer.health"""
+
+        
+
+        
+       
         
    
     def on_draw(self):
@@ -97,6 +107,17 @@ class MyGame(arcade.Window):
         self.camera.use()
 
         self.scene.draw()
+
+        self.gui_camera.use()
+
+        score_text = f"Health: {self.health}"
+        arcade.draw_text(
+            score_text,
+            10,
+            10,
+            arcade.csscolor.WHITE,
+            18,
+        )
    
     def on_key_press(self, key, modifiers):
         if key == arcade.key.UP or key == arcade.key.W:
@@ -135,8 +156,6 @@ class MyGame(arcade.Window):
         target_y = self.player_sprite.center_y - (viewport_height/3 )
 
         
-        if target_x > 900:
-            target_x = 900
         self.camera.move_to((target_x, target_y))
 
         
@@ -153,6 +172,10 @@ class MyGame(arcade.Window):
         self.physics_engine.update()
 
         self.center_camera_player()
+
+        """Add update health when enemies hit once theose are implemented"""
+
+        """add game over when health = 0"""
 
 
    

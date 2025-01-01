@@ -1,0 +1,72 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "Map_Template.json",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "1-050a2494.tsx": {
+            "scaleInDock": 0.125,
+            "scaleInEditor": 1
+        },
+        "Map Template(1).tmj": {
+            "scale": 0.4096875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 480.8543096872616,
+                "y": 318.5354691075515
+            }
+        },
+        "Map Template.tmj": {
+            "scale": 0.38408203124999996,
+            "selectedLayer": 5,
+            "viewCenter": {
+                "x": 512.9112636664125,
+                "y": 318.9422832443428
+            }
+        },
+        "Map_Template.json": {
+            "scale": 0.38408203124999996,
+            "selectedLayer": 6,
+            "viewCenter": {
+                "x": 512.9112636664125,
+                "y": 318.9422832443428
+            }
+        },
+        "Map_Template.tmj": {
+            "scale": 0.33,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 509.09090909090907,
+                "y": 156.06060606060612
+            }
+        },
+        "Rock.tsx": {
+            "scaleInDock": 0.33,
+            "scaleInEditor": 0.5
+        }
+    },
+    "last.imagePath": "C:/Users/brand/OneDrive/PyArcade Game/Images",
+    "map.lastUsedFormat": "json",
+    "map.width": 32,
+    "openFiles": [
+        "Map Template(1).tmj",
+        "1-050a2494.tsx",
+        "Rock.tsx",
+        "Map_Template.json"
+    ],
+    "project": "untitled.tiled-project",
+    "recentFiles": [
+        "Map Template(1).tmj",
+        "1-050a2494.tsx",
+        "Rock.tsx",
+        "Map_Template.json",
+        "Map_Template.tmj",
+        "Map Template.tmj"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}
