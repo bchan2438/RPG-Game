@@ -6,3 +6,6 @@ Version 1.0:
   
 Version 1.1:
   -player camera implemented
+
+Version 1.2:
+  -.json map implemented using Tiled, collision with map walls implemented
