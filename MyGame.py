@@ -1,5 +1,5 @@
 """
-Platformer Game
+RPG Game
 """
 import arcade
 
@@ -12,6 +12,34 @@ CHARACTER_SCALING = .1
 TILE_SCALING = 1.2
 PLAYER_MOVEMENT_SPEED = 5
 LAYER_NAME_WALLS = "Walls_Collidable"
+
+class Enemy(arcade.Sprite):
+    def __init__(self, image_path, scale, health, speed, defense, damage):
+        super().__init__(image_path, scale)
+        self.health = health
+        self.damage = damage
+        self.speed = speed
+        self.defense = defense
+        self.target = None
+
+    def update(self):
+        if self.target:
+            self.follow_target(self.target)\
+
+    def follow_target(self, target):
+        if self.center_x < target.center_x:
+            self.change_x = self.speed
+        elif self.center_x > target.center_x:
+            self.change_x = -self.speed
+
+        if self.center_y < target.center_y:
+            self.change_y = self.speed
+        elif self.center_y > target.center_y:
+            self.change_y = -self.speed
+class Goblin(Enemy):
+    def __init__(self):
+        super().__init__("Images/Goblin.png", 0.5, health = 1,speed = 1,defense = 1,damage = 1)
+    
 class MyGame(arcade.Window):
     """
     Main application class.
@@ -37,6 +65,8 @@ class MyGame(arcade.Window):
 
         self.camera = None
         self.health = 0
+
+        self.swing_sound = arcade.load_sound("Sounds/Swing_Sword.mp3")
 
 
         arcade.set_background_color(arcade.csscolor.BLACK)
@@ -72,6 +102,13 @@ class MyGame(arcade.Window):
         self.player_sprite.center_x = 156
         self.player_sprite.center_y = 156
         self.scene.add_sprite("Player", self.player_sprite)
+        self.enemies = arcade.SpriteList()
+
+        Goblin1 = Goblin()
+        Goblin1.center_x = 300
+        Goblin1.center_y = 300
+        Goblin1.target = self.player_sprite
+        self.enemies.append(Goblin1)
 
         if self.tile_map.background_color:
             arcade.set_background_color(self.tile_map.background_color)
@@ -90,6 +127,7 @@ class MyGame(arcade.Window):
         # Keep track of the score
         self.health = 10 
         """Will be changed to characer.health"""
+        self.walk_sound_player = None  # Keeps track of the sound player
 
         
 
@@ -107,6 +145,8 @@ class MyGame(arcade.Window):
         self.camera.use()
 
         self.scene.draw()
+        
+        self.enemies.draw()
 
         self.gui_camera.use()
 
@@ -122,12 +162,16 @@ class MyGame(arcade.Window):
     def on_key_press(self, key, modifiers):
         if key == arcade.key.UP or key == arcade.key.W:
             self.player_sprite.change_y = PLAYER_MOVEMENT_SPEED
+            
         elif key == arcade.key.DOWN or key == arcade.key.S:
             self.player_sprite.change_y = -PLAYER_MOVEMENT_SPEED
+            
         elif key == arcade.key.LEFT or key == arcade.key.A:
             self.player_sprite.change_x = -PLAYER_MOVEMENT_SPEED
+            
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = PLAYER_MOVEMENT_SPEED
+            
     def on_key_release(self, key, modifiers):
        
 
@@ -173,9 +217,12 @@ class MyGame(arcade.Window):
 
         self.center_camera_player()
 
+        self.enemies.update()
+
         """Add update health when enemies hit once theose are implemented"""
 
         """add game over when health = 0"""
+        
 
 
    
