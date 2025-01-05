@@ -2,16 +2,19 @@
 RPG Game
 """
 import arcade
+import random
+import time
 
 
 # Constants
 SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 640
 SCREEN_TITLE = "RPG"
-CHARACTER_SCALING = .1
+CHARACTER_SCALING = .15
 TILE_SCALING = 1.2
 PLAYER_MOVEMENT_SPEED = 5
 LAYER_NAME_WALLS = "Walls_Collidable"
+NUM_ENEMIES = 5
 
 class Enemy(arcade.Sprite):
     def __init__(self, image_path, scale, health, speed, defense, damage):
@@ -21,10 +24,13 @@ class Enemy(arcade.Sprite):
         self.speed = speed
         self.defense = defense
         self.target = None
+        self.last_attack_time = 0
 
     def update(self):
         if self.target:
-            self.follow_target(self.target)\
+            self.follow_target(self.target)
+        self.center_x += self.change_x
+        self.center_y += self.change_y
 
     def follow_target(self, target):
         if self.center_x < target.center_x:
@@ -38,7 +44,7 @@ class Enemy(arcade.Sprite):
             self.change_y = -self.speed
 class Goblin(Enemy):
     def __init__(self):
-        super().__init__("Images/Goblin.png", 0.5, health = 1,speed = 1,defense = 1,damage = 1)
+        super().__init__("Images/Goblin.png", 0.08, health = 5,speed = 1,defense = 0,damage = 1)
     
 class MyGame(arcade.Window):
     """
@@ -104,11 +110,14 @@ class MyGame(arcade.Window):
         self.scene.add_sprite("Player", self.player_sprite)
         self.enemies = arcade.SpriteList()
 
-        Goblin1 = Goblin()
-        Goblin1.center_x = 300
-        Goblin1.center_y = 300
-        Goblin1.target = self.player_sprite
-        self.enemies.append(Goblin1)
+        for _ in range(NUM_ENEMIES):
+            Goblin1 = Goblin()
+            # Min 300,300. max 1100 650 
+            Goblin1.center_x = random.randint(300,1100)
+            Goblin1.center_y = random.randint(300,650)
+            Goblin1.target = self.player_sprite
+            self.enemies.append(Goblin1)
+        
 
         if self.tile_map.background_color:
             arcade.set_background_color(self.tile_map.background_color)
@@ -184,6 +193,21 @@ class MyGame(arcade.Window):
             self.player_sprite.change_x = 0
         elif key == arcade.key.RIGHT or key == arcade.key.D:
             self.player_sprite.change_x = 0
+    def on_mouse_press(self, x, y, button, modifiers):
+        if button == arcade.MOUSE_BUTTON_LEFT:
+            attack_range = 90  # Range of the attack
+
+            # Check for enemies within range
+            for enemy in self.enemies:
+                distance = arcade.get_distance(self.player_sprite.center_x, self.player_sprite.center_y, enemy.center_x, enemy.center_y)
+                if distance <= attack_range:
+                    arcade.play_sound(self.swing_sound)
+                    enemy.health -= 1
+                
+
+                    if enemy.health <= 0:
+                        self.enemies.remove(enemy)
+
     def center_camera_player(self):
         # Define the zoom level (e.g., 0.7 for zoomed-in view)
         zoom_level = 0.7
@@ -219,7 +243,17 @@ class MyGame(arcade.Window):
 
         self.enemies.update()
 
+        current_time = time.time()
+    
+
         """Add update health when enemies hit once theose are implemented"""
+        for enemy in self.enemies:
+            if arcade.check_for_collision(self.player_sprite, enemy):
+                if current_time - enemy.last_attack_time >= 2:  # 2-second cooldown
+                    self.health -= enemy.damage
+                    print(f"Player hit! Health: {self.health}")
+                    enemy.last_attack_time = current_time
+            
 
         """add game over when health = 0"""
         
