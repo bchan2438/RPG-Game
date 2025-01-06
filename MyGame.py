@@ -11,10 +11,12 @@ SCREEN_WIDTH = 1024
 SCREEN_HEIGHT = 640
 SCREEN_TITLE = "RPG"
 CHARACTER_SCALING = .15
-TILE_SCALING = 1.2
-PLAYER_MOVEMENT_SPEED = 5
+TILE_SCALING = 1.4
+INSIDE_WALL_SCALING = .1
+PLAYER_MOVEMENT_SPEED = 3
 LAYER_NAME_WALLS = "Walls_Collidable"
 NUM_ENEMIES = 5
+NUM_WALLS = 10
 
 class Enemy(arcade.Sprite):
     def __init__(self, image_path, scale, health, speed, defense, damage):
@@ -29,6 +31,7 @@ class Enemy(arcade.Sprite):
     def update(self):
         if self.target:
             self.follow_target(self.target)
+        self.rebound()
         self.center_x += self.change_x
         self.center_y += self.change_y
 
@@ -42,9 +45,22 @@ class Enemy(arcade.Sprite):
             self.change_y = self.speed
         elif self.center_y > target.center_y:
             self.change_y = -self.speed
+    def rebound(self):
+        if arcade.check_for_collision(self, self.target):
+        # Rebound the enemy
+            if self.center_x < self.target.center_x:
+                self.center_x -= self.speed * 2
+            elif self.center_x > self.target.center_x:
+                self.center_x += self.speed * 2
+
+            if self.center_y < self.target.center_y:
+                self.center_y -= self.speed * 2
+            elif self.center_y > self.target.center_y:
+                self.center_y += self.speed * 2
+
 class Goblin(Enemy):
     def __init__(self):
-        super().__init__("Images/Goblin.png", 0.08, health = 5,speed = 1,defense = 0,damage = 1)
+        super().__init__("Images/Goblin.png", 0.08, health = random.randint(3,6),speed = random.uniform(0.8,1.2),defense = 0,damage = random.randint(1,2))
     
 class MyGame(arcade.Window):
     """
@@ -71,6 +87,8 @@ class MyGame(arcade.Window):
 
         self.camera = None
         self.health = 0
+
+        self.enemy_physics_engines = []
 
         self.swing_sound = arcade.load_sound("Sounds/Swing_Sword.mp3")
 
@@ -102,6 +120,8 @@ class MyGame(arcade.Window):
 
         self.scene.add_sprite_list("Player")
         self.scene.add_sprite_list("Walls", use_spatial_hash = True)
+
+        self.scene.add_sprite_list("Inside Walls", use_spatial_hash= True)
        
         image_source =  "Images/Warrior_Image.png"
         self.player_sprite = arcade.Sprite(image_source, CHARACTER_SCALING)
@@ -117,6 +137,20 @@ class MyGame(arcade.Window):
             Goblin1.center_y = random.randint(300,650)
             Goblin1.target = self.player_sprite
             self.enemies.append(Goblin1)
+            enemy_engine = self.physics_engine = arcade.PhysicsEngineSimple(
+                Goblin1, arcade.SpriteList([self.player_sprite])
+            )
+            self.enemy_physics_engines.append(enemy_engine)
+            enemy_wall_engine = self.physics_engine = arcade.PhysicsEngineSimple(
+                Goblin1, self.scene["Inside Walls"]
+            )
+            self.enemy_physics_engines.append(enemy_wall_engine)
+        
+        for _ in range(NUM_WALLS):
+            inside_wall = arcade.Sprite("Images/Rock.png", INSIDE_WALL_SCALING)
+            inside_wall.center_x = random.randint(300,1100)
+            inside_wall.center_y = random.randint(300,650)
+            self.scene["Inside Walls"].append(inside_wall)
         
 
         if self.tile_map.background_color:
@@ -124,17 +158,19 @@ class MyGame(arcade.Window):
 
 
 
-        self.physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite, walls=self.scene.get_sprite_list(LAYER_NAME_WALLS)
-        )
-
         self.camera = arcade.Camera(self.width, self.height)
 
                 # Set up the GUI Camera
         self.gui_camera = arcade.Camera(self.width, self.height)
+        self.physics_engine = arcade.PhysicsEngineSimple(
+            self.player_sprite, self.scene.get_sprite_list(LAYER_NAME_WALLS)
+        )
+        self.wall_physics_engine = arcade.PhysicsEngineSimple(
+            self.player_sprite, self.scene["Inside Walls"]
+        )
 
         # Keep track of the score
-        self.health = 10 
+        self.health = 50
         """Will be changed to characer.health"""
         self.walk_sound_player = None  # Keeps track of the sound player
 
@@ -238,10 +274,14 @@ class MyGame(arcade.Window):
 
         # Move the player with the physics engine
         self.physics_engine.update()
+        self.wall_physics_engine.update()
 
         self.center_camera_player()
 
         self.enemies.update()
+        for engine in self.enemy_physics_engines:
+            engine.update()
+        
 
         current_time = time.time()
     
