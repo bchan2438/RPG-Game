@@ -27,3 +27,11 @@ Version 1.4:
   -Player attack on click and enemy elimination implemented 
 
   List for next update: Fix enemies overlapping with player image, implement walls, attept at making enemies only move with clear line of sight(i.e no walls between)
+
+Version 1.5: 
+
+  -Enemies no Longer overlap with player
+
+  -Wall sprites are randomly generated
+
+  List for next update: Fix enemy collision with walls, change generation of walls to something like corridors rahter than random, line of sight update if those two aree accomplished 
