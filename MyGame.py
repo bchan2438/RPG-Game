@@ -15,6 +15,7 @@ TILE_SCALING = 1.4
 INSIDE_WALL_SCALING = .1
 PLAYER_MOVEMENT_SPEED = 3
 LAYER_NAME_WALLS = "Walls_Collidable"
+
 NUM_ENEMIES = 5
 NUM_WALLS = 10
 
@@ -46,8 +47,9 @@ class Enemy(arcade.Sprite):
         elif self.center_y > target.center_y:
             self.change_y = -self.speed
     def rebound(self):
+        # Check for collision with the target (player)
         if arcade.check_for_collision(self, self.target):
-        # Rebound the enemy
+            # Rebound the enemy from the player
             if self.center_x < self.target.center_x:
                 self.center_x -= self.speed * 2
             elif self.center_x > self.target.center_x:
@@ -57,6 +59,7 @@ class Enemy(arcade.Sprite):
                 self.center_y -= self.speed * 2
             elif self.center_y > self.target.center_y:
                 self.center_y += self.speed * 2
+
 
 class Goblin(Enemy):
     def __init__(self):
@@ -89,6 +92,7 @@ class MyGame(arcade.Window):
         self.health = 0
 
         self.enemy_physics_engines = []
+        self.enemy_wall_engines = []
 
         self.swing_sound = arcade.load_sound("Sounds/Swing_Sword.mp3")
 
@@ -141,17 +145,8 @@ class MyGame(arcade.Window):
                 Goblin1, arcade.SpriteList([self.player_sprite])
             )
             self.enemy_physics_engines.append(enemy_engine)
-            enemy_wall_engine = self.physics_engine = arcade.PhysicsEngineSimple(
-                Goblin1, self.scene["Inside Walls"]
-            )
-            self.enemy_physics_engines.append(enemy_wall_engine)
-        
-        for _ in range(NUM_WALLS):
-            inside_wall = arcade.Sprite("Images/Rock.png", INSIDE_WALL_SCALING)
-            inside_wall.center_x = random.randint(300,1100)
-            inside_wall.center_y = random.randint(300,650)
-            self.scene["Inside Walls"].append(inside_wall)
-        
+            
+       
 
         if self.tile_map.background_color:
             arcade.set_background_color(self.tile_map.background_color)
@@ -165,9 +160,7 @@ class MyGame(arcade.Window):
         self.physics_engine = arcade.PhysicsEngineSimple(
             self.player_sprite, self.scene.get_sprite_list(LAYER_NAME_WALLS)
         )
-        self.wall_physics_engine = arcade.PhysicsEngineSimple(
-            self.player_sprite, self.scene["Inside Walls"]
-        )
+       
 
         # Keep track of the score
         self.health = 50
@@ -274,12 +267,14 @@ class MyGame(arcade.Window):
 
         # Move the player with the physics engine
         self.physics_engine.update()
-        self.wall_physics_engine.update()
+        
 
         self.center_camera_player()
 
         self.enemies.update()
         for engine in self.enemy_physics_engines:
+            engine.update()
+        for engine in self.enemy_wall_engines:
             engine.update()
         
 
