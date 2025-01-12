@@ -35,3 +35,9 @@ Version 1.5:
   -Wall sprites are randomly generated
 
   List for next update: Fix enemy collision with walls, change generation of walls to something like corridors rahter than random, line of sight update if those two aree accomplished 
+
+Version 1.6: 
+
+  -Map overhauled, wall sprites eliminated. 
+
+  List for next update: enemy collision with json map
