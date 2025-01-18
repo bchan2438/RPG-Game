@@ -41,3 +41,9 @@ Version 1.6:
   -Map overhauled, wall sprites eliminated. 
 
   List for next update: enemy collision with json map
+
+Version 1.7:
+
+  -Enemy collision with JSON map implemented 
+
+  List for next update: Line of sight movement, potentially an update for enemy spawn locations, create sprite for staircase at end of map
