@@ -141,10 +141,11 @@ class MyGame(arcade.Window):
             Goblin1.center_y = random.randint(300,650)
             Goblin1.target = self.player_sprite
             self.enemies.append(Goblin1)
-            enemy_engine = self.physics_engine = arcade.PhysicsEngineSimple(
-                Goblin1, arcade.SpriteList([self.player_sprite])
+            enemy_physics_engine = arcade.PhysicsEngineSimple(
+            Goblin1, self.scene.get_sprite_list(LAYER_NAME_WALLS)
             )
-            self.enemy_physics_engines.append(enemy_engine)
+            self.enemy_physics_engines.append(enemy_physics_engine)
+            
             
        
 
@@ -274,9 +275,6 @@ class MyGame(arcade.Window):
         self.enemies.update()
         for engine in self.enemy_physics_engines:
             engine.update()
-        for engine in self.enemy_wall_engines:
-            engine.update()
-        
 
         current_time = time.time()
     
@@ -286,7 +284,6 @@ class MyGame(arcade.Window):
             if arcade.check_for_collision(self.player_sprite, enemy):
                 if current_time - enemy.last_attack_time >= 2:  # 2-second cooldown
                     self.health -= enemy.damage
-                    print(f"Player hit! Health: {self.health}")
                     enemy.last_attack_time = current_time
             
 
