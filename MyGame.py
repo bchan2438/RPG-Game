@@ -13,14 +13,14 @@ SCREEN_TITLE = "RPG"
 CHARACTER_SCALING = .15
 TILE_SCALING = 1.4
 INSIDE_WALL_SCALING = .1
-PLAYER_MOVEMENT_SPEED = 3
+PLAYER_MOVEMENT_SPEED = 4
 LAYER_NAME_WALLS = "Walls_Collidable"
 
 NUM_ENEMIES = 5
 NUM_WALLS = 10
 
 class Enemy(arcade.Sprite):
-    def __init__(self, image_path, scale, health, speed, defense, damage):
+    def __init__(self, image_path, scale, health, speed, defense, damage, walls_list):
         super().__init__(image_path, scale)
         self.health = health
         self.damage = damage
@@ -28,6 +28,7 @@ class Enemy(arcade.Sprite):
         self.defense = defense
         self.target = None
         self.last_attack_time = 0
+        self.walls = walls_list
 
     def update(self):
         if self.target:
@@ -37,15 +38,87 @@ class Enemy(arcade.Sprite):
         self.center_y += self.change_y
 
     def follow_target(self, target):
-        if self.center_x < target.center_x:
-            self.change_x = self.speed
-        elif self.center_x > target.center_x:
-            self.change_x = -self.speed
 
-        if self.center_y < target.center_y:
-            self.change_y = self.speed
-        elif self.center_y > target.center_y:
-            self.change_y = -self.speed
+        if self.has_clear_path(target, self.walls):
+            if self.center_x < target.center_x:
+                self.change_x = self.speed
+            elif self.center_x > target.center_x:
+                self.change_x = -self.speed
+
+            if self.center_y < target.center_y:
+                self.change_y = self.speed
+            elif self.center_y > target.center_y:
+                self.change_y = -self.speed
+        else:
+            self.change_y = 0
+            self.change_x = 0
+    def has_clear_path(self, target, walls):
+       
+            start = (self.center_x, self.center_y)
+            end = (target.center_x, target.center_y)
+           
+            for wall in walls:
+                # Get wall's bounding box as (left, right, bottom, top)
+                rect = (wall.left, wall.right, wall.bottom, wall.top)
+                if self.line_intersects_rect(start, end, rect):
+                    return False
+            return True
+
+    def line_intersects_rect(self, p1, p2, rect):
+        """
+        Checks if the line segment (p1 to p2) intersects the rectangle defined by rect.
+        """
+        left, right, bottom, top = rect
+        # Define the four edges of the rectangle
+        edges = [
+            ((left, bottom), (left, top)),     # left edge
+            ((left, top), (right, top)),         # top edge
+            ((right, top), (right, bottom)),     # right edge
+            ((right, bottom), (left, bottom))    # bottom edge
+        ]
+        # If the line intersects any edge, return True.
+        for edge in edges:
+            if self.lines_intersect(p1, p2, edge[0], edge[1]):
+                return True
+        return False
+
+    def lines_intersect(self, p1, p2, p3, p4):
+        """
+        Checks if line segments (p1, p2) and (p3, p4) intersect using the orientation method.
+        """
+        def orientation(a, b, c):
+            # Calculate the cross product
+            val = (b[1] - a[1]) * (c[0] - b[0]) - (b[0] - a[0]) * (c[1] - b[1])
+            if val == 0:
+                return 0  # Collinear
+            return 1 if val > 0 else 2  # Clockwise or Counterclockwise
+
+        def on_segment(a, b, c):
+            # Check if point b lies on segment ac.
+            if min(a[0], c[0]) <= b[0] <= max(a[0], c[0]) and min(a[1], c[1]) <= b[1] <= max(a[1], c[1]):
+                    return True
+            return False
+
+        o1 = orientation(p1, p2, p3)
+        o2 = orientation(p1, p2, p4)
+        o3 = orientation(p3, p4, p1)
+        o4 = orientation(p3, p4, p2)
+
+        # General case: if orientations are different, the lines intersect.
+        if o1 != o2 and o3 != o4:
+            return True
+
+        # Special Cases
+        if o1 == 0 and on_segment(p1, p3, p2): return True
+        if o2 == 0 and on_segment(p1, p4, p2): return True
+        if o3 == 0 and on_segment(p3, p1, p4): return True
+        if o4 == 0 and on_segment(p3, p2, p4): return True
+
+        return False
+
+
+
+
     def rebound(self):
         # Check for collision with the target (player)
         if arcade.check_for_collision(self, self.target):
@@ -62,8 +135,8 @@ class Enemy(arcade.Sprite):
 
 
 class Goblin(Enemy):
-    def __init__(self):
-        super().__init__("Images/Goblin.png", 0.08, health = random.randint(3,6),speed = random.uniform(0.8,1.2),defense = 0,damage = random.randint(1,2))
+    def __init__(self, walls_list):
+        super().__init__("Images/Goblin.png", 0.08, health = random.randint(3,6),speed = random.uniform(0.8,1.2),defense = 0,damage = random.randint(1,2), walls_list=walls_list)
     
 class MyGame(arcade.Window):
     """
@@ -123,6 +196,7 @@ class MyGame(arcade.Window):
 
 
         self.scene.add_sprite_list("Player")
+        self.scene.add_sprite_list("Stairs")
         self.scene.add_sprite_list("Walls", use_spatial_hash = True)
 
         self.scene.add_sprite_list("Inside Walls", use_spatial_hash= True)
@@ -134,8 +208,17 @@ class MyGame(arcade.Window):
         self.scene.add_sprite("Player", self.player_sprite)
         self.enemies = arcade.SpriteList()
 
+        stairs = "Images/Staircase.png"
+        self.stair_sprite = arcade.Sprite(stairs, CHARACTER_SCALING)
+        self.stair_sprite.center_x = 850
+        self.stair_sprite.center_y = 350
+        self.scene.add_sprite("Stairs", self.stair_sprite)
+
+
+        wall_list = self.scene.get_sprite_list(LAYER_NAME_WALLS)
+
         for _ in range(NUM_ENEMIES):
-            Goblin1 = Goblin()
+            Goblin1 = Goblin(wall_list)
             # Min 300,300. max 1100 650 
             Goblin1.center_x = random.randint(300,1100)
             Goblin1.center_y = random.randint(300,650)
