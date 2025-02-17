@@ -47,3 +47,11 @@ Version 1.7:
   -Enemy collision with JSON map implemented 
 
   List for next update: Line of sight movement, potentially an update for enemy spawn locations, create sprite for staircase at end of map
+
+Version 1.8: 
+
+  -Line of sight implemented
+
+  -Staircase sprite is imported and placed in correct spot
+
+  List for next update: Fix lag issues caused by line of sight, Look into multiple levels
